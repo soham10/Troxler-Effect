@@ -15,7 +15,7 @@ Troxler's fading (or Troxler's effect) is a phenomenon in which a stimulus that 
 ## Features
 
 - **Interactive canvas** with configurable fixation cross and fuzzy peripheral spots
-- **Adjustable parameters** — cross size and spot size with multiple levels
+- **Adjustable parameters** - cross size and spot size with multiple levels
 - **Precision timer** using `performance.now()` for accurate sub-second measurements
 - **Automatic data saving** to a local SQLite database
 - **Results dashboard** with summary statistics, sortable table, search filtering, and CSV export
@@ -31,7 +31,7 @@ troxler/
 ├── app.py                  # Flask backend (API + routing)
 ├── requirements.txt        # Python dependencies
 ├── troxler_results.db      # SQLite database (auto-created)
-└── templates/
+└── files/
     ├── index.html           # Experiment interface
     └── results.html         # Results dashboard
 ```
@@ -77,10 +77,10 @@ The SQLite database (`troxler_results.db`) is created automatically on first run
 ### Running the Experiment
 
 1. **Enter your name** in the Participant field on the right panel.
-2. **Adjust parameters** — use the +/− buttons or arrow keys to set the Cross Size and Spot Size.
-3. **Start the timer** — click Start Timer (or press `Space`) and immediately fix your gaze on the central cross. Do not move your eyes.
-4. **Record the vanish** — when the surrounding spots appear to fade or disappear, click Record Vanish (or press `T`). Your time is saved automatically.
-5. **Reset and repeat** — press Reset (or `R`) to run another trial.
+2. **Adjust parameters** - use the +/− buttons or arrow keys to set the Cross Size and Spot Size.
+3. **Start the timer** - click Start Timer (or press `Space`) and immediately fix your gaze on the central cross. Do not move your eyes.
+4. **Record the vanish** - when the surrounding spots appear to fade or disappear, click Record Vanish (or press `T`). Your time is saved automatically.
+5. **Reset and repeat** - press Reset (or `R`) to run another trial.
 
 ### Keyboard Shortcuts
 
@@ -96,11 +96,11 @@ The SQLite database (`troxler_results.db`) is created automatically on first run
 
 Navigate to **View Results →** (top-right) or go to `http://localhost:5000/results` to see:
 
-- **Summary stats** — total trials, mean vanish time, fastest, slowest
-- **Sortable table** — click any column header to sort
-- **Search** — filter results by participant name
-- **Export** — download all data as a CSV file
-- **Delete** — remove individual records
+- **Summary stats** - total trials, mean vanish time, fastest, slowest
+- **Sortable table** - click any column header to sort
+- **Search** - filter results by participant name
+- **Export** - download all data as a CSV file
+- **Delete** - remove individual records
 
 ---
 
