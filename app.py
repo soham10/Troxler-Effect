@@ -1,23 +1,19 @@
 from flask import Flask, render_template, request, jsonify
-import sqlite3
+from supabase import create_client
 from datetime import datetime
+import os
 
 app = Flask(__name__)
-DB_PATH = "troxler_results.db"
 
-def init_db():
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS results (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                cross_size INTEGER NOT NULL,
-                spot_size INTEGER NOT NULL,
-                vanish_time REAL NOT NULL,
-                timestamp TEXT NOT NULL
-            )
-        """)
-        conn.commit()
+# ── Supabase setup ───────────────────────────────────────
+# Set these as Environment Variables in Vercel Dashboard:
+#   SUPABASE_URL  → your project URL
+#   SUPABASE_KEY  → your anon/public key
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+
+def get_db():
+    return create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @app.route("/")
 def index():
@@ -37,28 +33,28 @@ def submit():
     if not name or cross_size is None or spot_size is None or vanish_time is None:
         return jsonify({"error": "Missing fields"}), 400
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute(
-            "INSERT INTO results (name, cross_size, spot_size, vanish_time, timestamp) VALUES (?,?,?,?,?)",
-            (name, cross_size, spot_size, vanish_time, timestamp)
-        )
-        conn.commit()
+    db = get_db()
+    db.table("results").insert({
+        "name": name,
+        "cross_size": cross_size,
+        "spot_size": spot_size,
+        "vanish_time": vanish_time,
+        "timestamp": timestamp
+    }).execute()
     return jsonify({"success": True})
 
 @app.route("/api/results")
 def get_results():
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.row_factory = sqlite3.Row
-        rows = conn.execute("SELECT * FROM results ORDER BY id DESC").fetchall()
-    return jsonify([dict(r) for r in rows])
+    db = get_db()
+    response = db.table("results").select("*").order("id", desc=True).execute()
+    return jsonify(response.data)
 
 @app.route("/api/delete/<int:record_id>", methods=["DELETE"])
 def delete_record(record_id):
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute("DELETE FROM results WHERE id=?", (record_id,))
-        conn.commit()
+    db = get_db()
+    db.table("results").delete().eq("id", record_id).execute()
     return jsonify({"success": True})
 
+# For local development
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True, port=5000)
