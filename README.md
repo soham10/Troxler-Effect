@@ -28,12 +28,13 @@ Troxler's fading (or Troxler's effect) is a phenomenon in which a stimulus that 
 
 ```
 troxler/
-├── app.py                  # Flask backend (API + routing)
-├── requirements.txt        # Python dependencies
-├── troxler_results.db      # SQLite database (auto-created)
-└── files/
-    ├── index.html           # Experiment interface
-    └── results.html         # Results dashboard
+├── api/
+│   └── index.py
+├── templates/
+│   ├── index.html 
+│   └── results.html
+├── requirements.txt
+└── vercel.json
 ```
 
 ---
