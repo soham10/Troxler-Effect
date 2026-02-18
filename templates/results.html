@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Results — Troxler Effect Timing</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --panel: #141418;
+    --border: #2a2a32;
+    --teal: #00d4c8;
+    --teal-dim: rgba(0,212,200,0.1);
+    --red: #ff4757;
+    --text: #e8e8f0;
+    --muted: #5a5a70;
+    --success: #2ecc71;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+  .logo span { color: var(--teal); }
+  .nav-link {
+    font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none; padding: 8px 16px;
+    border: 1px solid var(--border); border-radius: 4px; transition: all 0.2s;
+  }
+  .nav-link:hover { color: var(--teal); border-color: var(--teal); }
+
+  .main { max-width: 1100px; margin: 0 auto; padding: 40px; }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    letter-spacing: -1px;
+  }
+  .page-sub { font-size: 12px; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 36px; }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+  .stat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+  }
+  .stat-label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .stat-val { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; color: var(--teal); }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .search-input {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: 4px;
+    outline: none;
+    width: 240px;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--teal); }
+  .search-input::placeholder { color: var(--muted); }
+  .btn {
+    padding: 10px 18px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    text-decoration: none;
+  }
+  .btn-ghost { background: transparent; color: var(--muted); border-color: var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text); }
+  .btn-teal { background: var(--teal); color: #000; font-weight: 500; border-color: var(--teal); }
+  .btn-teal:hover { background: #00ffe8; }
+  .ml-auto { margin-left: auto; }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: rgba(0,212,200,0.05); border-bottom: 1px solid var(--border); }
+  th {
+    text-align: left;
+    padding: 14px 18px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 400;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  th:hover { color: var(--teal); }
+  th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+  th.sorted .sort-arrow { opacity: 1; color: var(--teal); }
+  td {
+    padding: 14px 18px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .td-name { font-weight: 500; color: var(--text); }
+  .td-time { color: var(--teal); font-size: 16px; font-weight: 500; }
+  .td-id { color: var(--muted); font-size: 11px; }
+  .td-ts { color: var(--muted); font-size: 11px; }
+  .delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+  .delete-btn:hover { color: var(--red); background: rgba(255,71,87,0.1); }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px;
+    color: var(--muted);
+  }
+  .empty-state a { color: var(--teal); text-decoration: none; }
+
+  .badge {
+    display: inline-block;
+    background: var(--teal-dim);
+    color: var(--teal);
+    border: 1px solid rgba(0,212,200,0.2);
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 11px;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--success); color: #000;
+    font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 12px 24px; border-radius: 4px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 100; pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--red); }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Troxler Effect Timing</div>
+  <a href="/" class="nav-link">← Back to Experiment</a>
+</header>
+
+<div class="main">
+  <div class="page-title">Results</div>
+  <div class="page-sub" id="recordCount">Loading records…</div>
+
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card">
+      <div class="stat-label">Total Trials</div>
+      <div class="stat-val" id="statTotal">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Mean Vanish Time</div>
+      <div class="stat-val" id="statMean">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Fastest</div>
+      <div class="stat-val" id="statMin">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Slowest</div>
+      <div class="stat-val" id="statMax">—</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" class="search-input" id="searchInput" placeholder="Filter by name…" oninput="filterTable()">
+    <button class="btn btn-ghost" onclick="loadResults()">↺ Refresh</button>
+    <button class="btn btn-teal ml-auto" onclick="exportCSV()">↓ Export CSV</button>
+  </div>
+
+  <div class="table-wrap">
+    <table id="resultsTable">
+      <thead>
+        <tr>
+          <th onclick="sortBy('id')">#<span class="sort-arrow" id="sort-id">↕</span></th>
+          <th onclick="sortBy('name')">Name<span class="sort-arrow" id="sort-name">↕</span></th>
+          <th onclick="sortBy('cross_size')">Cross<span class="sort-arrow" id="sort-cross_size">↕</span></th>
+          <th onclick="sortBy('spot_size')">Spot<span class="sort-arrow" id="sort-spot_size">↕</span></th>
+          <th onclick="sortBy('vanish_time')">Vanish Time<span class="sort-arrow" id="sort-vanish_time">↕</span></th>
+          <th onclick="sortBy('timestamp')">Recorded<span class="sort-arrow" id="sort-timestamp">↕</span></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let allData = [];
+let sortKey = 'id';
+let sortDir = -1; // -1 = desc
+
+async function loadResults() {
+  const res = await fetch('/api/results');
+  allData = await res.json();
+  renderStats();
+  filterTable();
+}
+
+function renderStats() {
+  const n = allData.length;
+  document.getElementById('statTotal').textContent = n;
+  document.getElementById('recordCount').textContent = `${n} trial${n !== 1 ? 's' : ''} recorded`;
+  if (n === 0) {
+    ['statMean','statMin','statMax'].forEach(id => document.getElementById(id).textContent = '—');
+    return;
+  }
+  const times = allData.map(r => r.vanish_time);
+  const mean = times.reduce((a, b) => a + b, 0) / n;
+  document.getElementById('statMean').textContent = mean.toFixed(2) + 's';
+  document.getElementById('statMin').textContent  = Math.min(...times).toFixed(2) + 's';
+  document.getElementById('statMax').textContent  = Math.max(...times).toFixed(2) + 's';
+}
+
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = allData.filter(r => r.name.toLowerCase().includes(q));
+  const sorted = [...filtered].sort((a, b) => {
+    const av = a[sortKey], bv = b[sortKey];
+    return typeof av === 'string'
+      ? sortDir * av.localeCompare(bv)
+      : sortDir * (av - bv);
+  });
+  renderTable(sorted);
+}
+
+function sortBy(key) {
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = -1; }
+  document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
+  document.querySelectorAll('.sort-arrow').forEach(el => el.textContent = '↕');
+  const arrow = document.getElementById('sort-' + key);
+  if (arrow) {
+    arrow.closest('th').classList.add('sorted');
+    arrow.textContent = sortDir === 1 ? '↑' : '↓';
+  }
+  filterTable();
+}
+
+function renderTable(data) {
+  const tbody = document.getElementById('tableBody');
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No records yet. <a href="/">Run the experiment →</a></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td class="td-id">${r.id}</td>
+      <td class="td-name">${escHtml(r.name)}</td>
+      <td><span class="badge">${r.cross_size}px</span></td>
+      <td><span class="badge">${r.spot_size}px</span></td>
+      <td class="td-time">${r.vanish_time.toFixed(2)}s</td>
+      <td class="td-ts">${r.timestamp}</td>
+      <td><button class="delete-btn" onclick="deleteRecord(${r.id})" title="Delete">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+async function deleteRecord(id) {
+  if (!confirm('Delete this record?')) return;
+  const res = await fetch(`/api/delete/${id}`, { method: 'DELETE' });
+  if (res.ok) {
+    allData = allData.filter(r => r.id !== id);
+    renderStats();
+    filterTable();
+    showToast('Record deleted');
+  }
+}
+
+function exportCSV() {
+  if (allData.length === 0) { showToast('No data to export', true); return; }
+  const header = 'id,name,cross_size,spot_size,vanish_time,timestamp';
+  const rows = allData.map(r =>
+    `${r.id},"${r.name}",${r.cross_size},${r.spot_size},${r.vanish_time},"${r.timestamp}"`
+  );
+  const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'troxler_results.csv';
+  a.click();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg, isErr = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isErr ? ' error' : '') + ' show';
+  setTimeout(() => { t.className = 'toast' + (isErr ? ' error' : ''); }, 2500);
+}
+
+loadResults();
+setInterval(loadResults, 10000);
+</script>
+</body>
+</html>
