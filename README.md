@@ -1,8 +1,8 @@
 # Troxler Effect Timing
 
-A web-based experiment to measure and collect **Troxler's Fading** data — the perceptual phenomenon where fixating on a central point causes peripheral stimuli to fade from awareness.
+A web-based experiment to measure and collect **Troxler's Fading** data, the perceptual phenomenon where fixating on a central point causes peripheral stimuli to fade from awareness.
 
-Built for **PH314 — Optics** by Soham Sahasrabuddhe.
+Built for **PH314 Optics** by Soham Sahasrabuddhe.
 
 ---
 
