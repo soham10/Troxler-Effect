@@ -3,7 +3,7 @@ from supabase import create_client
 from datetime import datetime
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../templates')
 
 # ── Supabase setup ───────────────────────────────────────
 # Set these as Environment Variables in Vercel Dashboard:
