@@ -69,8 +69,6 @@ troxler/
    http://localhost:5000
    ```
 
-The SQLite database (`troxler_results.db`) is created automatically on first run.
-
 ---
 
 ## How to Use
