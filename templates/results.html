@@ -146,6 +146,17 @@
   .td-time { color: var(--teal); font-size: 16px; font-weight: 500; }
   .td-id { color: var(--muted); font-size: 11px; }
   .td-ts { color: var(--muted); font-size: 11px; }
+  .delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+  .delete-btn:hover { color: var(--red); background: rgba(255,71,87,0.1); }
 
   .empty-state {
     text-align: center;
@@ -176,6 +187,61 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
   .toast.error { background: var(--red); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 32px;
+    max-width: 460px;
+    width: 90%;
+  }
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .modal-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+  .modal-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    padding: 12px;
+    border-radius: 4px;
+    outline: none;
+    margin-bottom: 20px;
+  }
+  .modal-input:focus { border-color: var(--teal); }
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+  .btn-cancel { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-cancel:hover { color: var(--text); border-color: var(--text); }
+  .btn-danger { background: var(--red); color: #fff; border: 1px solid var(--red); }
+  .btn-danger:hover { background: #ff3344; }
+  .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -223,6 +289,7 @@
           <th onclick="sortBy('spot_size')">Spot<span class="sort-arrow" id="sort-spot_size">↕</span></th>
           <th onclick="sortBy('vanish_time')">Vanish Time<span class="sort-arrow" id="sort-vanish_time">↕</span></th>
           <th onclick="sortBy('timestamp')">Recorded<span class="sort-arrow" id="sort-timestamp">↕</span></th>
+          <th></th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -231,6 +298,20 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-title">Confirm Deletion</div>
+    <div class="modal-desc">
+      To delete this record, please type the participant's name <strong id="confirmName"></strong> exactly as shown:
+    </div>
+    <input type="text" class="modal-input" id="deleteConfirmInput" placeholder="Type name to confirm">
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()" disabled>Delete Record</button>
+    </div>
+  </div>
+</div>
 
 <script>
 let allData = [];
@@ -287,7 +368,7 @@ function sortBy(key) {
 function renderTable(data) {
   const tbody = document.getElementById('tableBody');
   if (data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No records yet. <a href="/">Run the experiment →</a></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No records yet. <a href="/">Run the experiment →</a></td></tr>`;
     return;
   }
   tbody.innerHTML = data.map(r => `
@@ -298,8 +379,62 @@ function renderTable(data) {
       <td><span class="badge">${r.spot_size}px</span></td>
       <td class="td-time">${r.vanish_time.toFixed(2)}s</td>
       <td class="td-ts">${r.timestamp}</td>
+      <td><button class="delete-btn" onclick="deleteRecord(${r.id})" title="Delete">✕</button></td>
     </tr>
   `).join('');
+}
+
+let deleteTargetId = null;
+let deleteTargetName = null;
+
+async function deleteRecord(id) {
+  const record = allData.find(r => r.id === id);
+  if (!record) return;
+  
+  deleteTargetId = id;
+  deleteTargetName = record.name;
+  
+  document.getElementById('confirmName').textContent = record.name;
+  document.getElementById('deleteConfirmInput').value = '';
+  document.getElementById('confirmDeleteBtn').disabled = true;
+  document.getElementById('deleteModal').classList.add('show');
+  
+  document.getElementById('deleteConfirmInput').focus();
+}
+
+document.getElementById('deleteConfirmInput').addEventListener('input', (e) => {
+  const btn = document.getElementById('confirmDeleteBtn');
+  btn.disabled = e.target.value !== deleteTargetName;
+});
+
+document.getElementById('deleteConfirmInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter' && e.target.value === deleteTargetName) {
+    confirmDelete();
+  }
+});
+
+async function confirmDelete() {
+  const modal = document.getElementById('deleteModal');
+  modal.classList.remove('show');
+  
+  const res = await fetch(`/api/delete/${deleteTargetId}`, { method: 'DELETE' });
+  if (res.ok) {
+    allData = allData.filter(r => r.id !== deleteTargetId);
+    renderStats();
+    filterTable();
+    showToast('Record deleted');
+  } else {
+    showToast('Failed to delete record', true);
+  }
+  
+  deleteTargetId = null;
+  deleteTargetName = null;
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('show');
+  deleteTargetId = null;
+  deleteTargetName = null;
 }
 
 function exportCSV() {
